@@ -1,0 +1,33 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "clangBuild",
+            "command": "clang++.exe",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "-D_DEBUG_",
+                "-D_CRT_SECURE_NO_WARNINGS",
+                "-O2"
+            ],
+            "options": {
+                "cwd": "C:\\Program Files\\LLVM\\bin"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Launch",
+            "type": "process",
+            "command": "${workspaceFolder}\\${fileBasenameNoExtension}.exe",
+            "dependsOn": "clangBuild",
+            "problemMatcher": []
+        }
+    ]
+}
