@@ -11,8 +11,7 @@
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
                 "-D_DEBUG_",
-                "-D_CRT_SECURE_NO_WARNINGS",
-                "-O2"
+                "-D_CRT_SECURE_NO_WARNINGS"
             ],
             "options": {
                 "cwd": "C:\\Program Files\\LLVM\\bin"
