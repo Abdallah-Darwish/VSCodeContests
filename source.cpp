@@ -1,12 +1,10 @@
-#include <algorithm>
-#include <cmath>
-#include <fstream>
-#include <limits>
-#include <sstream>
 #include <iostream>
+#include <algorithm>
+#include <fstream>
+#include <sstream>
 using namespace std;
-using ll	= long long int;
-const int N = 1e5 + 10;
+using ll	= long long;
+const int N = 200'010;
 int main()
 {
 	ios_base::sync_with_stdio(false), cout.tie(nullptr), cin.tie(nullptr);
@@ -16,7 +14,7 @@ int main()
 	cin.rdbuf(in.rdbuf());
 	cout << boolalpha;
 #endif
-
+	// your code goes here
 #ifdef _DEBUG_
 	cout << endl;
 	cin.rdbuf(cinbuf);
