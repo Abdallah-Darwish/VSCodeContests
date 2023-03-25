@@ -9,11 +9,12 @@
             "command": "clang++",
             "args": [
                 "-g",
-                "${file}",
+                "${workspaceFolder}${pathSeparator}source.cpp",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}.exe",
+                "${workspaceFolder}${pathSeparator}sln.exe",
                 "-D_DEBUG_",
-                "-D_CRT_SECURE_NO_WARNINGS"
+                "-D_CRT_SECURE_NO_WARNINGS",
+                "-std=c++20"
             ],
             "group": {
                 "kind": "build",
@@ -23,7 +24,7 @@
         {
             "label": "Launch",
             "type": "process",
-            "command": "${workspaceFolder}/${fileBasenameNoExtension}.exe",
+            "command": "${workspaceFolder}${pathSeparator}sln.exe",
             "dependsOn": "clangBuild",
             "problemMatcher": []
         }
