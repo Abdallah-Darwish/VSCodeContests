@@ -28,6 +28,7 @@ in.txt
 *.la
 *.a
 *.lib
+**/*.dSYM/*
 
 # Executables
 *.exe
