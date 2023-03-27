@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "LLDB Launch",
-            "program": "${workspaceFolder}/${fileBasenameNoExtension}.exe",
+            "program": "${workspaceFolder}${pathSeparator}sln.exe",
             "args": [],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "clangBuild"
