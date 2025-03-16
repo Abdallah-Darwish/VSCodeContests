@@ -1,6 +1,8 @@
 *.ilk
 *.pdb
 in.txt
+**/.vs/**
+**/VSCodeContests/*
 # Prerequisites
 *.d
 

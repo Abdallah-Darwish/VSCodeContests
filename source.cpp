@@ -1,22 +1,19 @@
 #include <iostream>
-#include <algorithm>
-#include <fstream>
-#include <sstream>
-using namespace std;
-using ll	= long long;
-const int N = 200'010;
-int main()
+#ifdef _DEBUG_
+#include "util.hpp"
+using namespace util;
+using namespace util::leetcode;
+#else
+static void enter()
 {
 	ios_base::sync_with_stdio(false), cout.tie(nullptr), cin.tie(nullptr);
-#ifdef _DEBUG_
-	ifstream in("in.txt");
-	streambuf *cinbuf = cin.rdbuf();
-	cin.rdbuf(in.rdbuf());
-	cout << boolalpha;
-#endif
-	// your code goes here
-#ifdef _DEBUG_
-	cout << endl;
-	cin.rdbuf(cinbuf);
-#endif
 }
+static void exit() {}
+#endif
+using namespace std;
+const int N = 505;
+void solve()
+{
+	// your code goes here
+}
+int main() { enter(), solve(), exit(); }
