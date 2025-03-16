@@ -54,7 +54,7 @@ namespace util
 			{
 				os << endl;
 			}
-			int sz = size(v);
+			decltype(size(v)) sz = size(v);
 			for (const auto &i : v)
 			{
 				sz--;
@@ -84,6 +84,7 @@ namespace util
 	{
 		return print(os, v);
 	}
+
 	namespace leetcode
 	{
 		template <typename T> istream &read(istream &in, T &item)
@@ -134,6 +135,18 @@ namespace util
 			}
 			return in;
 		}
+
+		template <typename T> struct read_wrapper
+		{
+			T &val;
+		};
+		template <typename T> read_wrapper<T> read(T &v) { return {v}; }
+		template <typename T>
+		istream &operator>>(istream &in, read_wrapper<T> &&w)
+		{
+			return read<T>(in, w.val);
+		}
+
 		template <concepts::is_readable T>
 		istream &operator>>(istream &in, T &v)
 		{
