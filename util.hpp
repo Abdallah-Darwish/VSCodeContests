@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <bitset>
 #include <iostream>
 using namespace std;
 using ll  = long long;
@@ -27,7 +28,7 @@ namespace util
 		concept has_insert = requires(T &t) { t.insert(*begin(t)); };
 		template <typename T>
 		concept is_insertable = has_insert<T> || has_push_back<T>;
-		template <class P>
+		template <typename P>
 		concept is_pair = requires(P &p) {
 			typename P::first_type;
 			typename P::second_type;
@@ -36,11 +37,20 @@ namespace util
 			requires std::same_as<decltype(p.first), typename P::first_type>;
 			requires std::same_as<decltype(p.second), typename P::second_type>;
 		};
+		template <typename B>
+		concept is_bitset = requires(B &b) {
+			size(b);
+			b.set(0);
+			b.test(0);
+			requires std::same_as<decltype(b.to_string()), string>;
+		};
 		template <typename T>
-		concept is_printable =
-			(is_iterable<T> && !is_same_v<T, string>) || is_pair<T>;
+		concept is_non_str_iterable = is_iterable<T> && !is_same_v<T, string> &&
+									  !is_same_v<remove_all_extents_t<T>, char>;
 		template <typename T>
-		concept is_readable = is_printable<T>;
+		concept is_printable = is_non_str_iterable<T> || is_pair<T>;
+		template <typename T>
+		concept is_readable = is_non_str_iterable<T> || is_pair<T>;
 	} // namespace concepts
 
 	void enter();
@@ -59,7 +69,7 @@ namespace util
 			{
 				sz--;
 				print(os, i, lpad + 2);
-				if (sz) { cout << ", "; }
+				if (sz) { os << ", "; }
 				if constexpr (concepts::is_iterable<decltype(i)>)
 				{
 					os << endl;
@@ -69,8 +79,8 @@ namespace util
 			{
 				os << string(lpad, ' ');
 			}
-			else { cout << ' '; }
-			cout << "}";
+			else { os << ' '; }
+			os << "}";
 		}
 		else if constexpr (concepts::is_pair<T>)
 		{
@@ -89,7 +99,13 @@ namespace util
 	{
 		template <typename T> istream &read(istream &in, T &item)
 		{
-			if constexpr (is_same_v<T, string>)
+			if constexpr (is_same_v<T, char>)
+			{
+				in.ignore(numeric_limits<streamsize>::max(), '"');
+				item = in.get();
+				in.ignore(numeric_limits<streamsize>::max(), '"');
+			}
+			else if constexpr (is_same_v<T, string>)
 			{
 				char quote = ' ';
 
@@ -98,7 +114,7 @@ namespace util
 					quote = '"';
 					in.ignore(1);
 				}
-				getline(cin, item, quote);
+				getline(in, item, quote);
 			}
 			else if constexpr (concepts::is_iterable<T>)
 			{

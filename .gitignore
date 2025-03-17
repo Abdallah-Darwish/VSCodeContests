@@ -3,6 +3,7 @@
 in.txt
 **/.vs/**
 **/VSCodeContests/*
+**/x64/**
 # Prerequisites
 *.d
 
