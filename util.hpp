@@ -84,7 +84,9 @@ namespace util
 		}
 		else if constexpr (concepts::is_pair<T>)
 		{
-			os << '[' << v.first << ", " << v.second << ']';
+			os << '[';
+			print(os, v.first) << ", ";
+			print(os, v.second) << ']';
 		}
 		else { os << v; }
 		return os;
@@ -139,10 +141,10 @@ namespace util
 			else if constexpr (concepts::is_pair<T>)
 			{
 				in.ignore(numeric_limits<streamsize>::max(), '[');
-				read(in, item.first);
-				in.ignore(numeric_limits<streamsize>::max(), ',');
-				read(in, item.second);
-				in.ignore(numeric_limits<streamsize>::max(), ']');
+				read(in, item.first)
+					.ignore(numeric_limits<streamsize>::max(), ',');
+				read(in, item.second)
+					.ignore(numeric_limits<streamsize>::max(), ']');
 			}
 			else
 			{
