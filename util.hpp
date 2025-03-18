@@ -6,6 +6,7 @@
 #include <vector>
 #include <bitset>
 #include <iostream>
+#include <string>
 using namespace std;
 using ll  = long long;
 using vi  = vector<int>;
@@ -44,23 +45,59 @@ namespace util
 			b.test(0);
 			requires std::same_as<decltype(b.to_string()), string>;
 		};
+		template <typename Q>
+		concept is_queue = requires(Q &q) {
+			typename Q::value_type;
+			q.push(declval<decltype(q.front())>());
+			q.pop();
+			q.front();
+			q.empty();
+			q.size();
+		};
+		template <typename S>
+		concept is_stack = requires(S &s) {
+			typename S::value_type;
+			s.push(declval<decltype(s.top())>());
+			s.pop();
+			s.top();
+			s.empty();
+			s.size();
+		};
 		template <typename T>
 		concept is_non_str_iterable = is_iterable<T> && !is_same_v<T, string> &&
 									  !is_same_v<remove_all_extents_t<T>, char>;
 		template <typename T>
-		concept is_printable = is_non_str_iterable<T> || is_pair<T>;
+		concept is_printable =
+			is_non_str_iterable<T> || is_pair<T> || is_queue<T> || is_stack<T>;
 		template <typename T>
-		concept is_readable = is_non_str_iterable<T> || is_pair<T>;
+		concept is_readable =
+			is_non_str_iterable<T> || is_pair<T> || is_queue<T> || is_stack<T>;
 	} // namespace concepts
 
 	void enter();
 	void exit();
 	template <typename T> ostream &print(ostream &os, const T &v, int lpad = 0)
 	{
-		if constexpr (concepts::is_iterable<T>)
+		if constexpr (concepts::is_queue<T> || concepts::is_stack<T>)
+		{
+			T q = v;
+			vector<typename T::value_type> vec{};
+			vec.reserve(q.size());
+			while (!q.empty())
+			{
+				if constexpr (concepts::is_queue<T>)
+				{
+					vec.push_back(q.front());
+				}
+				else { vec.push_back(q.top()); }
+				q.pop();
+			}
+			print(os, vec);
+		}
+		else if constexpr (concepts::is_non_str_iterable<T>)
 		{
 			os << string(lpad, ' ') << "{ ";
-			if constexpr (concepts::is_iterable<decltype(*begin(v))>)
+			if constexpr (concepts::is_non_str_iterable<decltype(*begin(v))>)
 			{
 				os << endl;
 			}
@@ -70,12 +107,12 @@ namespace util
 				sz--;
 				print(os, i, lpad + 2);
 				if (sz) { os << ", "; }
-				if constexpr (concepts::is_iterable<decltype(i)>)
+				if constexpr (concepts::is_non_str_iterable<decltype(i)>)
 				{
 					os << endl;
 				}
 			}
-			if constexpr (concepts::is_iterable<decltype(*begin(v))>)
+			if constexpr (concepts::is_non_str_iterable<decltype(*begin(v))>)
 			{
 				os << string(lpad, ' ');
 			}
@@ -101,7 +138,20 @@ namespace util
 	{
 		template <typename T> istream &read(istream &in, T &item)
 		{
-			if constexpr (is_same_v<T, char>)
+			if constexpr (concepts::is_queue<T> || concepts::is_stack<T>)
+			{
+				vector<typename T::value_type> vec{};
+				read(in, vec);
+				if constexpr (concepts::is_stack<T>)
+				{
+					reverse(vec.begin(), vec.end());
+				}
+				for (const auto &i : vec)
+				{
+					item.push(i);
+				}
+			}
+			else if constexpr (is_same_v<T, char>)
 			{
 				in.ignore(numeric_limits<streamsize>::max(), '"');
 				item = in.get();
@@ -118,7 +168,7 @@ namespace util
 				}
 				getline(in, item, quote);
 			}
-			else if constexpr (concepts::is_iterable<T>)
+			else if constexpr (concepts::is_non_str_iterable<T>)
 			{
 				in.ignore(numeric_limits<streamsize>::max(), '[');
 				while (in && (in.peek() != ']'))
