@@ -7,6 +7,7 @@
 #include <bitset>
 #include <iostream>
 #include <string>
+#include <variant>
 using namespace std;
 using ll  = long long;
 using vi  = vector<int>;
@@ -35,15 +36,15 @@ namespace util
 			typename P::second_type;
 			p.first;
 			p.second;
-			requires std::same_as<decltype(p.first), typename P::first_type>;
-			requires std::same_as<decltype(p.second), typename P::second_type>;
+			requires same_as<decltype(p.first), typename P::first_type>;
+			requires same_as<decltype(p.second), typename P::second_type>;
 		};
 		template <typename B>
 		concept is_bitset = requires(B &b) {
 			size(b);
 			b.set(0);
 			b.test(0);
-			requires std::same_as<decltype(b.to_string()), string>;
+			requires same_as<decltype(b.to_string()), string>;
 		};
 		template <typename Q>
 		concept is_queue = requires(Q &q) {
@@ -64,20 +65,56 @@ namespace util
 			s.size();
 		};
 		template <typename T>
+		concept is_nullable_variant = requires(T &t) {
+			t.operator=(nullptr);
+			variant_size_v<T> == 2;
+		};
+		template <typename T>
 		concept is_non_str_iterable = is_iterable<T> && !is_same_v<T, string> &&
 									  !is_same_v<remove_all_extents_t<T>, char>;
+		template <typename T>
+		concept is_binary_node = requires(T &t) {
+			typename T::value_type;
+			T();
+			T(declval<typename T::value_type>());
+			T(declval<typename T::value_type>(), declval<T *>(),
+			  declval<T *>());
+			requires same_as<decltype(t.left), T *>;
+			requires same_as<decltype(t.right), T *>;
+		};
+		template <typename P>
+		concept is_binary_node_p =
+			is_pointer_v<P> &&
+			is_binary_node<remove_const_t<remove_pointer_t<P>>>;
 		template <typename T>
 		concept is_printable =
 			is_non_str_iterable<T> || is_pair<T> || is_queue<T> || is_stack<T>;
 		template <typename T>
 		concept is_readable =
-			is_non_str_iterable<T> || is_pair<T> || is_queue<T> || is_stack<T>;
+			is_non_str_iterable<T> || is_pair<T> || is_queue<T> ||
+			is_stack<T> || is_nullable_variant<T> || is_binary_node_p<T>;
+
 	} // namespace concepts
+
+	template <typename T> struct binary_node
+	{
+		using value_type = T;
+		T val;
+		binary_node *left, *right;
+		binary_node(T v, binary_node *l, binary_node *r)
+			: val(v), left(l), right(r)
+		{
+		}
+		binary_node(T v) : binary_node(v, nullptr, nullptr) {}
+		binary_node() : binary_node({}, nullptr, nullptr) {}
+	};
 
 	void enter();
 	void exit();
 	template <typename T> ostream &print(ostream &os, const T &v, int lpad = 0)
 	{
+
+		if (lpad > 0) { os << string(lpad, ' '); }
 		if constexpr (concepts::is_queue<T> || concepts::is_stack<T>)
 		{
 			T q = v;
@@ -96,7 +133,7 @@ namespace util
 		}
 		else if constexpr (concepts::is_non_str_iterable<T>)
 		{
-			os << string(lpad, ' ') << "{ ";
+			os << "{ ";
 			if constexpr (concepts::is_non_str_iterable<decltype(*begin(v))>)
 			{
 				os << endl;
@@ -114,7 +151,7 @@ namespace util
 			}
 			if constexpr (concepts::is_non_str_iterable<decltype(*begin(v))>)
 			{
-				os << string(lpad, ' ');
+				if (lpad > 0) { os << string(lpad, ' '); }
 			}
 			else { os << ' '; }
 			os << "}";
@@ -136,9 +173,54 @@ namespace util
 
 	namespace leetcode
 	{
+		template <concepts::is_binary_node_p T>
+		using node_vector = vector<
+			variant<nullptr_t, typename remove_pointer_t<T>::value_type>>;
+		template <concepts::is_binary_node_p T>
+		T _read_node(const node_vector<T> &vec, int i)
+		{
+			if (i >= vec.size() || holds_alternative<nullptr_t>(vec[i]))
+			{
+				return static_cast<T>(nullptr);
+			}
+
+			return new (remove_pointer_t<T>)(get<1>(vec[i]),
+											 _read_node<T>(vec, 2 * i + 1),
+											 _read_node<T>(vec, 2 * i + 2));
+		}
 		template <typename T> istream &read(istream &in, T &item)
 		{
-			if constexpr (concepts::is_queue<T> || concepts::is_stack<T>)
+			if constexpr (concepts::is_nullable_variant<T>)
+			{
+				if (in.peek() == 'n')
+				{
+					in.ignore(4); // null
+					item = nullptr;
+				}
+				else
+				{
+					if constexpr (is_same_v<variant_alternative_t<0, T>,
+											nullptr_t>)
+					{
+						variant_alternative_t<1, T> i{};
+						read(in, i);
+						item = i;
+					}
+					else
+					{
+						variant_alternative_t<0, T> i{};
+						read(in, i);
+						item = i;
+					}
+				}
+			}
+			else if constexpr (concepts::is_binary_node_p<T>)
+			{
+				node_vector<T> vec{};
+				read(in, vec);
+				item = _read_node<T>(vec, 0);
+			}
+			else if constexpr (concepts::is_queue<T> || concepts::is_stack<T>)
 			{
 				vector<typename T::value_type> vec{};
 				read(in, vec);
