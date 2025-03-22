@@ -14,7 +14,7 @@ using vi  = vector<int>;
 using vvi = vector<vi>;
 namespace util
 {
-
+	const int PAD = 2;
 	namespace concepts
 	{
 		template <typename T>
@@ -69,6 +69,17 @@ namespace util
 			t.operator=(nullptr);
 			variant_size_v<T> == 2;
 		};
+		template <is_nullable_variant T> constexpr size_t not_null_index()
+		{
+			if constexpr (is_null_pointer_v<variant_alternative_t<0, T>>)
+			{
+				return 1;
+			}
+			else { return 0; }
+		}
+		template <is_nullable_variant T>
+		using not_null_alternative_t =
+			variant_alternative_t<not_null_index<T>(), T>;
 		template <typename T>
 		concept is_non_str_iterable = is_iterable<T> && !is_same_v<T, string> &&
 									  !is_same_v<remove_all_extents_t<T>, char>;
@@ -88,7 +99,8 @@ namespace util
 			is_binary_node<remove_const_t<remove_pointer_t<P>>>;
 		template <typename T>
 		concept is_printable =
-			is_non_str_iterable<T> || is_pair<T> || is_queue<T> || is_stack<T>;
+			is_non_str_iterable<T> || is_pair<T> || is_queue<T> ||
+			is_stack<T> || is_nullable_variant<T>;
 		template <typename T>
 		concept is_readable =
 			is_non_str_iterable<T> || is_pair<T> || is_queue<T> ||
@@ -111,11 +123,16 @@ namespace util
 
 	void enter();
 	void exit();
-	template <typename T> ostream &print(ostream &os, const T &v, int lpad = 0)
+	template <typename T>
+	ostream &print(ostream &os, const T &v, size_t lpad = 0)
 	{
-
-		if (lpad > 0) { os << string(lpad, ' '); }
-		if constexpr (concepts::is_queue<T> || concepts::is_stack<T>)
+		if (lpad) { cout << string(lpad, ' '); }
+		if constexpr (concepts::is_nullable_variant<T>)
+		{
+			if (holds_alternative<nullptr_t>(v)) { cout << "null"; }
+			else { print(os, get<concepts::not_null_index<T>()>(v)); }
+		}
+		else if constexpr (concepts::is_queue<T> || concepts::is_stack<T>)
 		{
 			T q = v;
 			vector<typename T::value_type> vec{};
@@ -133,27 +150,30 @@ namespace util
 		}
 		else if constexpr (concepts::is_non_str_iterable<T>)
 		{
-			os << "{ ";
+			os << "{";
+			size_t inner_lpad = 0;
 			if constexpr (concepts::is_non_str_iterable<decltype(*begin(v))>)
 			{
 				os << endl;
+				inner_lpad = lpad + PAD;
 			}
-			decltype(size(v)) sz = size(v);
+			else { cout << ' '; }
+			auto sz = size(v);
 			for (const auto &i : v)
 			{
 				sz--;
-				print(os, i, lpad + 2);
-				if (sz) { os << ", "; }
+				print(os, i, inner_lpad);
+				if (sz) { os << ","; }
 				if constexpr (concepts::is_non_str_iterable<decltype(i)>)
 				{
 					os << endl;
 				}
+				else { os << ' '; }
 			}
 			if constexpr (concepts::is_non_str_iterable<decltype(*begin(v))>)
 			{
 				if (lpad > 0) { os << string(lpad, ' '); }
 			}
-			else { os << ' '; }
 			os << "}";
 		}
 		else if constexpr (concepts::is_pair<T>)
@@ -199,19 +219,10 @@ namespace util
 				}
 				else
 				{
-					if constexpr (is_same_v<variant_alternative_t<0, T>,
-											nullptr_t>)
-					{
-						variant_alternative_t<1, T> i{};
-						read(in, i);
-						item = i;
-					}
-					else
-					{
-						variant_alternative_t<0, T> i{};
-						read(in, i);
-						item = i;
-					}
+
+					typename concepts::not_null_alternative_t<T> i{};
+					read(in, i);
+					item = i;
 				}
 			}
 			else if constexpr (concepts::is_binary_node_p<T>)
