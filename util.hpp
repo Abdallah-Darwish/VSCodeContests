@@ -65,10 +65,11 @@ namespace util
 			s.size();
 		};
 		template <typename T>
-		concept is_nullable_variant = requires(T &t) {
-			t.operator=(nullptr);
+		concept is_nullable_variant =
+			(is_null_pointer_v<variant_alternative_t<0, T>> ||
+			 is_null_pointer_v<variant_alternative_t<1, T>>) &&
 			variant_size_v<T> == 2;
-		};
+
 		template <is_nullable_variant T> constexpr size_t not_null_index()
 		{
 			if constexpr (is_null_pointer_v<variant_alternative_t<0, T>>)
@@ -190,6 +191,7 @@ namespace util
 	{
 		return print(os, v);
 	}
+#define dbg(_V) cout << #_V << ": " << _V << endl;
 
 	namespace leetcode
 	{
@@ -219,7 +221,6 @@ namespace util
 				}
 				else
 				{
-
 					typename concepts::not_null_alternative_t<T> i{};
 					read(in, i);
 					item = i;
@@ -252,13 +253,16 @@ namespace util
 			}
 			else if constexpr (is_same_v<T, string>)
 			{
-				char quote = ' ';
-
-				if (in.peek() == '"')
+				while (in && in.peek() == '\n')
 				{
-					quote = '"';
 					in.ignore(1);
 				}
+				char quote = '\n';
+				int nxt	   = in.peek();
+				if (nxt == ' ') { quote = ' '; }
+				else if (nxt == '"') { quote = '"'; }
+				if (nxt == quote) { cin.ignore(1); }
+
 				getline(in, item, quote);
 			}
 			else if constexpr (concepts::is_non_str_iterable<T>)
